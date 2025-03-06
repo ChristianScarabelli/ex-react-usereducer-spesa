@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useMemo } from "react";
 
 // Reducer 
 function cartReducer(state, action) {
@@ -40,7 +40,9 @@ export default function ProductsList() {
     const removeFromCart = (productIndex) => dispatch({ type: 'REMOVE_ITEM', payload: productIndex });
     const updateProductQuantity = (productIndex, quantity) => dispatch({ type: 'UPDATE_QUANTITY', payload: productIndex, quantity });
 
-    const totalToPay = addedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0).toFixed(2);
+    const totalToPay = useMemo(() => {
+        return addedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0).toFixed(2);
+    }, [addedProducts])
 
     return (
         <section>
