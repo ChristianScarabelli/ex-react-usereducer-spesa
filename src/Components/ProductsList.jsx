@@ -1,62 +1,60 @@
-import { useState } from "react"
+import { useReducer } from "react";
+
+// Reducer 
+function cartReducer(state, action) {
+    const productIndex = action.payload;
+
+    switch (action.type) {
+        case 'ADD_ITEM': {
+            const existingProduct = state.find((p) => p.index === productIndex);
+            if (existingProduct) {
+                return state.map((p) =>
+                    p.index === productIndex ? { ...p, quantity: p.quantity + 1 } : p
+                );
+            }
+            return [...state, { ...products[productIndex], quantity: 1, index: productIndex }];
+        }
+        case 'REMOVE_ITEM':
+            return state.filter((p) => p.index !== productIndex);
+        case 'UPDATE_QUANTITY':
+            return state.map((p) =>
+                p.index === productIndex ? { ...p, quantity: Math.max(1, Math.floor(Number(action.quantity))) } : p
+            );
+        default:
+            return state;
+    }
+}
+
+const products = [
+    { name: 'Mela', price: 0.5 },
+    { name: 'Pane', price: 1.2 },
+    { name: 'Latte', price: 1.0 },
+    { name: 'Pasta', price: 0.7 },
+];
 
 export default function ProductsList() {
-    // Stato per i prodotti aggiunti al carrello
-    const [addedProducts, setAddedProducts] = useState([])
 
-    const products = [
-        { name: 'Mela', price: 0.5 },
-        { name: 'Pane', price: 1.2 },
-        { name: 'Latte', price: 1.0 },
-        { name: 'Pasta', price: 0.7 },
-    ]
+    const [addedProducts, dispatch] = useReducer(cartReducer, []);
 
-    // Funzione per aggiungere un prodotto al carrello (se non è già presente)
-    // accetta l'indice del prodotto mappato, restituisce il prodotto aggiunto e l'array con tutti i prodotti aggiunti
-    const addToCart = (productIndex) => {
-        if (addedProducts.some((p) => p.index === productIndex)) {
-            updateProductQuantity(productIndex, 1); // Incrementa la quantità se il prodotto esiste già
-            return;
-        }
-        const newProduct = { ...products[productIndex], quantity: 1, index: productIndex }; // aggiungo la propiretà quantity al prodotto
-        setAddedProducts([newProduct, ...addedProducts]);
-    }
+    const addToCart = (productIndex) => dispatch({ type: 'ADD_ITEM', payload: productIndex });
+    const removeFromCart = (productIndex) => dispatch({ type: 'REMOVE_ITEM', payload: productIndex });
+    const updateProductQuantity = (productIndex, quantity) => dispatch({ type: 'UPDATE_QUANTITY', payload: productIndex, quantity });
 
-    // Funzione per aggiornare la quantità dei prodotti nel carrello
-    const updateProductQuantity = (productIndex, quantity) => {
-        const parsedQuantity = Math.max(1, Math.floor(Number(quantity))); // Converti in numero intero e minimo 1
-        setAddedProducts((prevProducts) =>
-            prevProducts.map((p) =>
-                p.index === productIndex ? { ...p, quantity: parsedQuantity } : p
-            )
-        );
-    }
-
-    // Funzione per rimuovere un prodotto dal carrello
-    const removeFromCart = (productIndex) => {
-        setAddedProducts((prevProducts) =>
-            prevProducts.filter((p) => p.index !== productIndex)
-        );
-    }
-
-    // Variabile del prezzo totale dei prodotti nel carrello
-    const totalToPay = addedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0)
-
+    const totalToPay = addedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0).toFixed(2);
 
     return (
         <section>
-            <div>
-                <h2>Lista dei prodotti</h2>
-                <ul>
-                    {products.map((p, i) => {
-                        return <li key={i}>
-                            <span>{p.name}</span>
-                            <span>{`${p.price}€`}</span>
-                            <button onClick={() => addToCart(i)}>Add to cart</button>
-                        </li>
-                    })}
-                </ul>
-            </div>
+            <h2>Lista dei prodotti</h2>
+            <ul>
+                {products.map((p, i) => (
+                    <li key={i}>
+                        <span>{p.name}</span>
+                        <span>{`${p.price}€`}</span>
+                        <button onClick={() => addToCart(i)}>Add to cart</button>
+                    </li>
+                ))}
+            </ul>
+
             <div>
                 {addedProducts.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -82,5 +80,5 @@ export default function ProductsList() {
                 )}
             </div>
         </section>
-    )
+    );
 }
