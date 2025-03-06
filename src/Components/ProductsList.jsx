@@ -12,15 +12,45 @@ export default function ProductsList() {
         { name: 'Pasta', price: 0.7 },
     ]
 
-    // Funzione per aggiungere un prodotto al carrello
-    // accetta il prodotto mappato, restituisce il prodotto aggiunto e l'array con tutti i prodotti aggiunti
-    // e aggiungo la propiretà quantity al prodotto
+    // Funzione per aggiungere un prodotto al carrello (se non è già presente)
+    // accetta l'indice del prodotto mappato, restituisce il prodotto aggiunto e l'array con tutti i prodotti aggiunti
     const addToCart = (productIndex) => {
-        const product = products[productIndex] // Prendo il prodotto usando l'indice
-        if (addedProducts.some(p => p.index === productIndex)) return    // se il prodotto è già presente nel carrello interrompo
-        const newProduct = { ...product, quantity: 1, index: productIndex }
+        if (addedProducts.some((p) => p.index === productIndex)) return; // Se esiste già non lo aggiungo
+        const newProduct = { ...products[productIndex], quantity: 1, index: productIndex }  // aggiungo la propiretà quantity al prodotto
         setAddedProducts([newProduct, ...addedProducts])
     }
+
+    // Funzione per aggiornare la quantità dei prodotti nel carrello
+    const updateProductQuantity = (productIndex) => {
+        setAddedProducts((prevProducts) =>
+            prevProducts.map((p) =>
+                p.index === productIndex ? { ...p, quantity: p.quantity + 1 } : p
+            )
+        );
+    };
+
+    // Funzione wrapper per il click del bottone
+    const handleClick = (productIndex) => {
+        // Prodotto esistente se combaciano gli indici
+        const exists = addedProducts.some((p) => p.index === productIndex);
+
+        // se esiste aggiorno la quantità, altrimenti lo aggiungo
+        if (exists) {
+            updateProductQuantity(productIndex);
+        } else {
+            addToCart(productIndex);
+        }
+    }
+
+    // Funzione per rimuovere un prodotto dal carrello
+    const removeFromCart = (productIndex) => {
+        setAddedProducts((prevProducts) =>
+            prevProducts.filter((p) => p.index !== productIndex)
+        );
+    }
+
+    // Variabile del prezzo totale dei prodotti nel carrello
+    const totalToPay = addedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0)
 
     return (
         <section>
@@ -31,7 +61,7 @@ export default function ProductsList() {
                         return <li key={i}>
                             <span>{p.name}</span>
                             <span>{`${p.price}€`}</span>
-                            <button onClick={() => addToCart(i)}>Add to cart</button>
+                            <button onClick={() => handleClick(i)}>Add to cart</button>
                         </li>
                     })
                     }
@@ -46,8 +76,10 @@ export default function ProductsList() {
                                 <span>{p.name}</span>
                                 <span>{`${p.price}€`}</span>
                                 <span>Quantità: {p.quantity}</span>
+                                <button onClick={() => removeFromCart(p.index)}>Rimuovi dal carrello</button>
                             </div>
                         ))}
+                        <strong>Totale da pagare: {totalToPay} €</strong>
                     </div>
                 ) : (
                     <h4>Il carrello è vuoto</h4>
