@@ -1,7 +1,6 @@
 import { useState } from "react"
 
 export default function ProductsList() {
-
     // Stato per i prodotti aggiunti al carrello
     const [addedProducts, setAddedProducts] = useState([])
 
@@ -15,31 +14,22 @@ export default function ProductsList() {
     // Funzione per aggiungere un prodotto al carrello (se non è già presente)
     // accetta l'indice del prodotto mappato, restituisce il prodotto aggiunto e l'array con tutti i prodotti aggiunti
     const addToCart = (productIndex) => {
-        if (addedProducts.some((p) => p.index === productIndex)) return; // Se esiste già non lo aggiungo
-        const newProduct = { ...products[productIndex], quantity: 1, index: productIndex }  // aggiungo la propiretà quantity al prodotto
-        setAddedProducts([newProduct, ...addedProducts])
+        if (addedProducts.some((p) => p.index === productIndex)) {
+            updateProductQuantity(productIndex, 1); // Incrementa la quantità se il prodotto esiste già
+            return;
+        }
+        const newProduct = { ...products[productIndex], quantity: 1, index: productIndex }; // aggiungo la propiretà quantity al prodotto
+        setAddedProducts([newProduct, ...addedProducts]);
     }
 
     // Funzione per aggiornare la quantità dei prodotti nel carrello
-    const updateProductQuantity = (productIndex) => {
+    const updateProductQuantity = (productIndex, quantity) => {
+        const parsedQuantity = Math.max(1, Math.floor(Number(quantity))); // Converti in numero intero e minimo 1
         setAddedProducts((prevProducts) =>
             prevProducts.map((p) =>
-                p.index === productIndex ? { ...p, quantity: p.quantity + 1 } : p
+                p.index === productIndex ? { ...p, quantity: parsedQuantity } : p
             )
         );
-    };
-
-    // Funzione wrapper per il click del bottone
-    const handleClick = (productIndex) => {
-        // Prodotto esistente se combaciano gli indici
-        const exists = addedProducts.some((p) => p.index === productIndex);
-
-        // se esiste aggiorno la quantità, altrimenti lo aggiungo
-        if (exists) {
-            updateProductQuantity(productIndex);
-        } else {
-            addToCart(productIndex);
-        }
     }
 
     // Funzione per rimuovere un prodotto dal carrello
@@ -52,6 +42,7 @@ export default function ProductsList() {
     // Variabile del prezzo totale dei prodotti nel carrello
     const totalToPay = addedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0)
 
+
     return (
         <section>
             <div>
@@ -61,10 +52,9 @@ export default function ProductsList() {
                         return <li key={i}>
                             <span>{p.name}</span>
                             <span>{`${p.price}€`}</span>
-                            <button onClick={() => handleClick(i)}>Add to cart</button>
+                            <button onClick={() => addToCart(i)}>Add to cart</button>
                         </li>
-                    })
-                    }
+                    })}
                 </ul>
             </div>
             <div>
@@ -72,10 +62,16 @@ export default function ProductsList() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <h3>Prodotti nel Carrello</h3>
                         {addedProducts.map((p) => (
-                            <div key={p.index} style={{ display: 'flex', gap: '10px' }}>
+                            <div key={p.index} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                 <span>{p.name}</span>
                                 <span>{`${p.price}€`}</span>
-                                <span>Quantità: {p.quantity}</span>
+                                <span>Quantità:
+                                    <input
+                                        type="number"
+                                        value={p.quantity}
+                                        onChange={(e) => updateProductQuantity(p.index, e.target.value)}
+                                    />
+                                </span>
                                 <button onClick={() => removeFromCart(p.index)}>Rimuovi dal carrello</button>
                             </div>
                         ))}
